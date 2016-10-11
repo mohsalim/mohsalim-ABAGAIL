@@ -86,7 +86,17 @@ public class DiscreteArffToBinary {
 					// Add each value with it's paired binary to a dictionary.
 					HashMap<String,String> hashValues = new HashMap<String,String>();
 					for(int i = 0; i < values.length; i++) {
-						String binary = (int)Math.pow(10, i) + "";
+						// Less readable/symmetric data but more efficient.
+						//String binary = (int)Math.pow(10, i) + "";
+						
+						// Produce binary strings from values: {b,o,x} => {001,010,100}
+						String binary = "";
+						for(int j = 0; j < values.length; j++) {
+							binary += i == j ? "1" : "0";
+						}
+						binary = removeFinalComma(binary);
+						
+						// Store into the hash map.
 						hashValues.put(removeFinalComma(values[i]), binary);
 					}
 					

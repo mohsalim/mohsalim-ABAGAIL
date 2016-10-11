@@ -14,7 +14,6 @@ import java.text.*;
  * TODO: Add MIMIC algorithm to list
  * TODO: Add my two datasets
  * TODO: Output in correct format (if it already doesn't)
- * TODO: Add this code to my personal repo for safety.
  * TODO: assignment specs say not to use backprop but the neural networks seem to use that here. is there an alternative option?
  * TODO: add a function to convert discrete datasets to binary strings 
  */
