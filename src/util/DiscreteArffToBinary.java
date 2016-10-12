@@ -89,14 +89,17 @@ public class DiscreteArffToBinary {
 						// Less readable/symmetric data but more efficient.
 						//String binary = (int)Math.pow(10, i) + "";
 						
-						// Produce binary strings from values: {b,o,x} => {001,010,100}
+						// Produce binary strings from values as separate features:
+						// {b,o,x} => {001,010,100} => {0,0,1,0,1,0,1,0,0}
+						// NOTE: this will do the same for the classification attribute, so keep that in mind!
 						String binary = "";
 						for(int j = 0; j < values.length; j++) {
-							binary += i == j ? "1" : "0";
+							binary += i == j ? "1," : "0,";
 						}
 						binary = removeFinalComma(binary);
 						
-						// Store into the hash map.
+						// Store into the hash map as paired attribute-value.
+						// Ex: bottom-left-square=x
 						hashValues.put(removeFinalComma(values[i]), binary);
 					}
 					

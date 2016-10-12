@@ -11,11 +11,15 @@ import java.io.*;
 import java.text.*;
 
 /**
- * TODO: Add MIMIC algorithm to list
- * TODO: Add my two datasets
+ * TODO: Add my two datasets (I only need one)
  * TODO: Output in correct format (if it already doesn't)
  * TODO: assignment specs say not to use backprop but the neural networks seem to use that here. is there an alternative option?
- * TODO: add a function to convert discrete datasets to binary strings 
+ * TODO: how to split into training/test?
+ * TODO: cross validation sets?
+ * TODO: should i not convert the classificaiton value to a binary feature?
+ * 
+ * TODO: part 1: test first 3 algorithms (no MIMIC) on a dataset
+ * TODO: part 2: find 3 fitness function problems and test all 4 algorithms.
  */
 
 /**
@@ -32,7 +36,7 @@ public class AbaloneTest {
     private static Instance[] instances = initializeTicTacToeInstances();
     //private static Instance[] instances = initializeNurseryInstances();    
     
-    private static int inputLayer = 8, hiddenLayer = 5, outputLayer = 1, trainingIterations = 1000;
+    private static int inputLayer = 27, hiddenLayer = 5, outputLayer = 1, trainingIterations = 1000;
     private static BackPropagationNetworkFactory factory = new BackPropagationNetworkFactory();
     
     private static ErrorMeasure measure = new SumOfSquaresError();
@@ -114,27 +118,36 @@ public class AbaloneTest {
         }
     }
     
-    private static Instance[] initializeInstances(String filePath, int samples, int numberOfAttributes) {
-        double[][][] attributes = new double[samples][][];
+    private static Instance[] initializeInstances(String filePath, int samples, int numberOfAttributes, double classificationMin, double classificationMax) {
+        double[][][] dataRow = new double[samples][][];
 
         BufferedReader br = null;
         Scanner scan = null;
         try {
             br = new BufferedReader(new FileReader(new File(filePath)));
 
-            for(int i = 0; i < attributes.length; i++) {
+            // For each number of samples.
+            for(int i = 0; i < dataRow.length; i++) {
+            	// Grab row and split by comma.
                 scan = new Scanner(br.readLine());
                 scan.useDelimiter(",");
 
-                attributes[i] = new double[2][];
-                attributes[i][0] = new double[numberOfAttributes]; // 7 attributes
-                attributes[i][1] = new double[1];
+                // Each data row has 2 arrays.
+                dataRow[i] = new double[2][];
+                
+                // First for attributes
+                dataRow[i][0] = new double[numberOfAttributes];
+                
+                // Second for output/classification
+                dataRow[i][1] = new double[1];
 
-                for(int j = 0; j < 7; j++) {
-                    attributes[i][0][j] = Double.parseDouble(scan.next());
+                // Scan attribute values for this row.
+                for(int j = 0; j < numberOfAttributes; j++) {
+                    dataRow[i][0][j] = Double.parseDouble(scan.next());
                 }
                 
-                attributes[i][1][0] = Double.parseDouble(scan.next());
+                // Scan output/classification result for this row.
+                dataRow[i][1][0] = Double.parseDouble(scan.next());
             }
             
         	// Correctly close the buffer reader if it exists.
@@ -152,26 +165,48 @@ public class AbaloneTest {
         	}
         }
 
-        Instance[] instances = new Instance[attributes.length];
+        Instance[] instances = new Instance[dataRow.length];
 
+        // Classifications range from X to Y so split in middle.
+        // Ex: Abalone data classification ranges from 0 to 30
+        // So split into 0 - 14 and 15 - 30
+        double splitClassification = classificationMax / 2.0;
+
+        // Iterate each instance and label it's classification value.
         for(int i = 0; i < instances.length; i++) {
-            instances[i] = new Instance(attributes[i][0]);
-            // classifications range from 0 to 30; split into 0 - 14 and 15 - 30
-            instances[i].setLabel(new Instance(attributes[i][1][0] < 15 ? 0 : 1));
+            instances[i] = new Instance(dataRow[i][0]);
+
+            // Normalize classification value.
+            int normalizedClassification = dataRow[i][1][0] < splitClassification ? 0 : 1;
+            instances[i].setLabel(new Instance(normalizedClassification));
         }
 
         return instances;
     }
 
     private static Instance[] initializeTicTacToeInstances() {
-    	return initializeInstances("tic-tac-toe-binary.txt", 958, 9);
+    	// 9 attributes * 3 unique values = 27 binary features
+    	return initializeInstances("tic-tac-toe-binary.txt", 958, 27, 0, 1);
     }
 
     private static Instance[] initializeNurseryInstances() {
-    	return initializeInstances("nursery-binary.txt", 12960, 8);
+    	/**
+    	 * @attribute parents {usual,pretentious,great_pret}
+		 * @attribute has_nurs {proper,less_proper,improper,critical,very_crit}
+		 * @attribute form {complete,completed,incomplete,foster}
+		 * @attribute children {1,2,3,more}
+		 * @attribute housing {convenient,less_conv,critical}
+		 * @attribute finance {convenient,inconv}
+		 * @attribute social {nonprob,slightly_prob,problematic}
+		 * @attribute health {recommended,priority,not_recom}
+		 * @attribute Class {not_recom,recommend,very_recom,priority,spec_prior}
+		 * 
+		 * 8 attributes => 3 + 5 + 4 + 4 + 3 + 2 + 3 + 3 = 27 binary features
+    	 */
+    	return initializeInstances("nursery-binary.txt", 12960, 27, 0, 1);
     }
     
     private static Instance[] initializeExampleInstances() {
-    	return initializeInstances("src/opt/test/abalone.txt", 4177, 7);
+    	return initializeInstances("src/opt/test/abalone.txt", 4177, 7, 0, 30);
     }
 }

@@ -74,22 +74,22 @@ public class KnapsackTest {
         RandomizedHillClimbing rhc = new RandomizedHillClimbing(hcp);      
         FixedIterationTrainer fit = new FixedIterationTrainer(rhc, 200000);
         fit.train();
-        System.out.println(ef.value(rhc.getOptimal()));
+        System.out.println("RHC: " + ef.value(rhc.getOptimal()));
         
         SimulatedAnnealing sa = new SimulatedAnnealing(100, .95, hcp);
         fit = new FixedIterationTrainer(sa, 200000);
         fit.train();
-        System.out.println(ef.value(sa.getOptimal()));
+        System.out.println("SA: " + ef.value(sa.getOptimal()));
         
         StandardGeneticAlgorithm ga = new StandardGeneticAlgorithm(200, 150, 25, gap);
         fit = new FixedIterationTrainer(ga, 1000);
         fit.train();
-        System.out.println(ef.value(ga.getOptimal()));
+        System.out.println("GA: " + ef.value(ga.getOptimal()));
         
         MIMIC mimic = new MIMIC(200, 100, pop);
         fit = new FixedIterationTrainer(mimic, 1000);
         fit.train();
-        System.out.println(ef.value(mimic.getOptimal()));
+        System.out.println("MIMIC: " + ef.value(mimic.getOptimal()));
     }
 
 }
