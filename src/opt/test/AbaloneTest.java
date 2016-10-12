@@ -24,14 +24,17 @@ import java.text.*;
 
 /**
  * Implementation of randomized hill climbing, simulated annealing, and genetic algorithm to
- * find optimal weights to a neural network that is classifying abalone as having either fewer 
- * or more than 15 rings. 
+ * find optimal weights to a neural network that is classifying one of the following:
+ * 	1. abalone as having either fewer or more than 15 rings.
+ * 	2. all possible tic tac toe end game board positions where it attempts to classify if player X won or not.
+ * 	3. nursery school application rankings and classifies what the rank of each application is (this data-set isn't converted correctly, so this won't work right).
  *
  * @author Hannah Lau
  * @author Mohammad Hassan Salim
  * @version 1.0
  */
 public class AbaloneTest {
+	// Select which data-set you want to run!
     //private static Instance[] instances = initializeExampleInstances();
     private static Instance[] instances = initializeTicTacToeInstances();
     //private static Instance[] instances = initializeNurseryInstances();    
@@ -53,26 +56,34 @@ public class AbaloneTest {
     private static DecimalFormat df = new DecimalFormat("0.000");
 
     public static void main(String[] args) {
+    	// Create neural networks for each algorithm.
         for(int i = 0; i < oa.length; i++) {
-            networks[i] = factory.createClassificationNetwork(
-                new int[] {inputLayer, hiddenLayer, outputLayer});
+        	// Create a neural network with layer information.
+        	int[] layers = new int[] {inputLayer, hiddenLayer, outputLayer};
+            networks[i] = factory.createClassificationNetwork(layers);
+            // Create an ANN optimization problem object with the data-set, ANN, and error measure function.
             nnop[i] = new NeuralNetworkOptimizationProblem(set, networks[i], measure);
         }
 
+        // Create each randomization optimization algorithm
         oa[0] = new RandomizedHillClimbing(nnop[0]);
         oa[1] = new SimulatedAnnealing(1E11, .95, nnop[1]);
         oa[2] = new StandardGeneticAlgorithm(200, 100, 10, nnop[2]);
 
+        // For each randomized algorithm
         for(int i = 0; i < oa.length; i++) {
+        	// Train with training set.
             double start = System.nanoTime(), end, trainingTime, testingTime, correct = 0, incorrect = 0;
             train(oa[i], networks[i], oaNames[i]); //trainer.train();
             end = System.nanoTime();
             trainingTime = end - start;
             trainingTime /= Math.pow(10,9);
 
+            // Set weights to the neural network.
             Instance optimalInstance = oa[i].getOptimal();
             networks[i].setWeights(optimalInstance.getData());
 
+            // Test with testing set.
             double predicted, actual;
             start = System.nanoTime();
             for(int j = 0; j < instances.length; j++) {
@@ -89,6 +100,7 @@ public class AbaloneTest {
             testingTime = end - start;
             testingTime /= Math.pow(10,9);
 
+            // Output results.
             results +=  "\nResults for " + oaNames[i] + ": \nCorrectly classified " + correct + " instances." +
                         "\nIncorrectly classified " + incorrect + " instances.\nPercent correctly classified: "
                         + df.format(correct/(correct+incorrect)*100) + "%\nTraining time: " + df.format(trainingTime)
