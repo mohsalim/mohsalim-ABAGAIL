@@ -8,15 +8,15 @@ import func.nn.backprop.*;
 
 import java.util.*;
 import java.io.*;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.*;
 
 /**
- * TODO: Add my two datasets (I only need one)
- * TODO: Output in correct format (if it already doesn't)
- * TODO: assignment specs say not to use backprop but the neural networks seem to use that here. is there an alternative option?
  * TODO: how to split into training/test?
  * TODO: cross validation sets?
- * TODO: should i not convert the classificaiton value to a binary feature?
  * 
  * TODO: part 1: test first 3 algorithms (no MIMIC) on a dataset
  * TODO: part 2: find 3 fitness function problems and test all 4 algorithms.
@@ -40,17 +40,37 @@ public class AbaloneTest {
     //private static Instance[] instances = initializeNurseryInstances();    
     
     private static int inputLayer = 27, hiddenLayer = 5, outputLayer = 1, trainingIterations = 1000;
+    
+    // Note: although we are using a back propagation factory to build back propagation ANNs,
+    // we are not using the back propagation technique as far as I can tell.
     private static BackPropagationNetworkFactory factory = new BackPropagationNetworkFactory();
     
     private static ErrorMeasure measure = new SumOfSquaresError();
 
     private static DataSet set = new DataSet(instances);
+    
+    private static int numberOfAlgorithmsToRun = 13;
 
-    private static BackPropagationNetwork networks[] = new BackPropagationNetwork[3];
-    private static NeuralNetworkOptimizationProblem[] nnop = new NeuralNetworkOptimizationProblem[3];
+    // See comment above on back propagation.
+    private static BackPropagationNetwork networks[] = new BackPropagationNetwork[numberOfAlgorithmsToRun];
+    private static NeuralNetworkOptimizationProblem[] nnop = new NeuralNetworkOptimizationProblem[numberOfAlgorithmsToRun];
 
-    private static OptimizationAlgorithm[] oa = new OptimizationAlgorithm[3];
-    private static String[] oaNames = {"RHC", "SA", "GA"};
+    private static OptimizationAlgorithm[] oa = new OptimizationAlgorithm[numberOfAlgorithmsToRun];
+    private static String[] oaNames = {
+    		"RHC", 
+    		"SA", 
+    		"SA-High-Heating", 
+    		"SA-Low-Cooling", 
+    		"SA-High-Heating-Low-Cooling", 
+    		"GA", 
+    		"GA-High-Population", 
+    		"GA-High-Mating", 
+    		"GA-High-Mutation",
+    		"GA-High-Population-High-Mating",
+    		"GA-High-Population-High-Mutation", 
+    		"GA-High-Mating-High-Mutation",
+    		"GA-High-Population-High-Mating-High-Mutation"
+    		};
     private static String results = "";
 
     private static DecimalFormat df = new DecimalFormat("0.000");
@@ -61,14 +81,44 @@ public class AbaloneTest {
         	// Create a neural network with layer information.
         	int[] layers = new int[] {inputLayer, hiddenLayer, outputLayer};
             networks[i] = factory.createClassificationNetwork(layers);
+            
             // Create an ANN optimization problem object with the data-set, ANN, and error measure function.
             nnop[i] = new NeuralNetworkOptimizationProblem(set, networks[i], measure);
         }
 
         // Create each randomization optimization algorithm
+        
+        // Randomized hill climbing.
+        // No configurations.
         oa[0] = new RandomizedHillClimbing(nnop[0]);
+        
+        // Simulated annealing.
+        // Default configurations.
         oa[1] = new SimulatedAnnealing(1E11, .95, nnop[1]);
-        oa[2] = new StandardGeneticAlgorithm(200, 100, 10, nnop[2]);
+        // Higher heating.
+        oa[2] = new SimulatedAnnealing(1E2, .95, nnop[2]);
+        // Lower cooling
+        oa[3] = new SimulatedAnnealing(1E11, .75, nnop[3]);
+        // Higher heating and lower cooling
+        oa[4] = new SimulatedAnnealing(1E2, .75, nnop[4]);
+        
+        // Genetic algorithms.
+        // Default configurations.
+        oa[5] = new StandardGeneticAlgorithm(200, 100, 10, nnop[5]);
+        // Higher population.
+        oa[6] = new StandardGeneticAlgorithm(400, 100, 10, nnop[6]);
+        // Higher mating.
+        oa[7] = new StandardGeneticAlgorithm(200, 150, 10, nnop[7]);
+        // Higher mutation.
+        oa[8] = new StandardGeneticAlgorithm(200, 100, 50, nnop[8]);
+		// High population and high mating
+        oa[9] = new StandardGeneticAlgorithm(400, 150, 10, nnop[9]);
+        // High population and high mutation
+        oa[10] = new StandardGeneticAlgorithm(400, 100, 50, nnop[10]);
+        // High mating and high mutation
+        oa[11] = new StandardGeneticAlgorithm(200, 150, 50, nnop[11]);
+        // High population, high mating, and high mutation
+        oa[12] = new StandardGeneticAlgorithm(400, 150, 50, nnop[12]);
 
         // For each randomized algorithm
         for(int i = 0; i < oa.length; i++) {
@@ -90,9 +140,9 @@ public class AbaloneTest {
                 networks[i].setInputValues(instances[j].getData());
                 networks[i].run();
 
-                predicted = Double.parseDouble(instances[j].getLabel().toString());
-                actual = Double.parseDouble(networks[i].getOutputValues().toString());
-
+                actual = Double.parseDouble(instances[j].getLabel().toString());
+                predicted = Double.parseDouble(networks[i].getOutputValues().toString());
+                
                 @SuppressWarnings("unused")
 				double trash = Math.abs(predicted - actual) < 0.5 ? correct++ : incorrect++;
             }
@@ -108,11 +158,23 @@ public class AbaloneTest {
         }
 
         System.out.println(results);
+        
+        // Store overall results into a file.
+		String newFilePath = "overall-results.txt" ;						
+		try (PrintStream out = new PrintStream(new FileOutputStream(newFilePath))) {
+		    out.println(results);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
     }
 
     private static void train(OptimizationAlgorithm oa, BackPropagationNetwork network, String oaName) {
         System.out.println("\nError results for " + oaName + "\n---------------------------");
 
+        // Keep track of error results.
+        ArrayList<String> errorResults = new ArrayList<String>();
+        
+        // Train the number of iterations given.
         for(int i = 0; i < trainingIterations; i++) {
             oa.train();
 
@@ -126,8 +188,19 @@ public class AbaloneTest {
                 error += measure.value(output, example);
             }
 
-            System.out.println(df.format(error));
+            String errorString = df.format(error);
+            System.out.println(errorString);
+            errorResults.add(errorString);
         }
+        
+        // Store error results into a file.
+		String newFilePath = oaName + "-error-results.txt" ;				
+		Path file = Paths.get(newFilePath);
+		try {
+			Files.write(file, errorResults, Charset.forName("UTF-8"));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
     }
     
     private static Instance[] initializeInstances(String filePath, int samples, int numberOfAttributes, double classificationMin, double classificationMax) {
@@ -192,7 +265,7 @@ public class AbaloneTest {
             int normalizedClassification = dataRow[i][1][0] < splitClassification ? 0 : 1;
             instances[i].setLabel(new Instance(normalizedClassification));
         }
-
+        
         return instances;
     }
 

@@ -83,19 +83,30 @@ public class DiscreteArffToBinary {
 					// Get values from comma separated string.
 					String[] values = parts[2].substring(1, parts[2].length() - 1).split(",");
 					
+					// Is this the classification attribute (usuall last attribute);
+					boolean isClassAttribute = line.startsWith("@attribute Class");
+					
 					// Add each value with it's paired binary to a dictionary.
 					HashMap<String,String> hashValues = new HashMap<String,String>();
 					for(int i = 0; i < values.length; i++) {
-						// Less readable/symmetric data but more efficient.
-						//String binary = (int)Math.pow(10, i) + "";
-						
-						// Produce binary strings from values as separate features:
-						// {b,o,x} => {001,010,100} => {0,0,1,0,1,0,1,0,0}
-						// NOTE: this will do the same for the classification attribute, so keep that in mind!
 						String binary = "";
-						for(int j = 0; j < values.length; j++) {
-							binary += i == j ? "1," : "0,";
+						
+						// If it's the classification value.
+						if(isClassAttribute) {
+							// Just use the index value for that.
+							binary += i;
 						}
+						else {
+							// Else wise it's a normal attribute.
+							// Produce binary strings from values as separate features:
+							// {b,o,x} => {001,010,100} => {0,0,1,0,1,0,1,0,0}
+							// NOTE: this will do the same for the classification attribute, so keep that in mind!
+							for(int j = 0; j < values.length; j++) {
+								binary += i == j ? "1," : "0,";
+							}
+						}
+						
+						// Remove final comma.
 						binary = removeFinalComma(binary);
 						
 						// Store into the hash map as paired attribute-value.
