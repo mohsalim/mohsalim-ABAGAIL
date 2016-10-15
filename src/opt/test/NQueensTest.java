@@ -60,7 +60,7 @@ public class NQueensTest {
         long starttime = System.currentTimeMillis();
         System.out.println("RHC: " + ef.value(rhc.getOptimal()));
         System.out.println("RHC: Board Position: ");
-       // System.out.println(ef.boardPositions());
+        System.out.println(ef.boardPositions());
         System.out.println("Time : "+ (System.currentTimeMillis() - starttime));
         
         System.out.println("============================");
@@ -72,7 +72,7 @@ public class NQueensTest {
         starttime = System.currentTimeMillis();
         System.out.println("SA: " + ef.value(sa.getOptimal()));
         System.out.println("SA: Board Position: ");
-       // System.out.println(ef.boardPositions());
+        System.out.println(ef.boardPositions());
         System.out.println("Time : "+ (System.currentTimeMillis() - starttime));
         
         System.out.println("============================");
@@ -83,7 +83,7 @@ public class NQueensTest {
         fit.train();
         System.out.println("GA: " + ef.value(ga.getOptimal()));
         System.out.println("GA: Board Position: ");
-        //System.out.println(ef.boardPositions());
+        System.out.println(ef.boardPositions());
         System.out.println("Time : "+ (System.currentTimeMillis() - starttime));
         
         System.out.println("============================");
@@ -94,7 +94,7 @@ public class NQueensTest {
         fit.train();
         System.out.println("MIMIC: " + ef.value(mimic.getOptimal()));
         System.out.println("MIMIC: Board Position: ");
-        //System.out.println(ef.boardPositions());
+        System.out.println(ef.boardPositions());
         System.out.println("Time : "+ (System.currentTimeMillis() - starttime));
     }
 }
