@@ -11,6 +11,7 @@ import opt.EvaluationFunction;
 import opt.GenericHillClimbingProblem;
 import opt.HillClimbingProblem;
 import opt.NeighborFunction;
+import opt.OptimizationAlgorithm;
 import opt.RandomizedHillClimbing;
 import opt.SimulatedAnnealing;
 import opt.example.*;
@@ -25,6 +26,7 @@ import opt.prob.GenericProbabilisticOptimizationProblem;
 import opt.prob.MIMIC;
 import opt.prob.ProbabilisticOptimizationProblem;
 import shared.FixedIterationTrainer;
+import util.RunLogFitnessFunction;
 
 /**
  * Copied from ContinuousPeaksTest
@@ -49,6 +51,16 @@ public class FourPeaksTest {
         GeneticAlgorithmProblem gap = new GenericGeneticAlgorithmProblem(ef, odd, mf, cf);
         ProbabilisticOptimizationProblem pop = new GenericProbabilisticOptimizationProblem(ef, odd, df);
         
+        String[] oaNames = {"RHC", "SA", "GA", "MIMIC"};
+        OptimizationAlgorithm[] oa = new OptimizationAlgorithm[4];   
+        oa[0] = new RandomizedHillClimbing(hcp);      
+        oa[1] = new SimulatedAnnealing(1E11, .95, hcp);
+        oa[2] = new StandardGeneticAlgorithm(200, 100, 10, gap);
+        oa[3] = new MIMIC(200, 20, pop);
+        for(int i = 0; i < oa.length; i++) {
+        	RunLogFitnessFunction.run(oa[i], oaNames[i], 1000, ef, "four-peaks");
+        }
+		    
         RandomizedHillClimbing rhc = new RandomizedHillClimbing(hcp);      
         FixedIterationTrainer fit = new FixedIterationTrainer(rhc, 200000);
         fit.train();

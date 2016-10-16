@@ -1,5 +1,11 @@
 package opt.test;
 
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
 
@@ -12,6 +18,7 @@ import opt.EvaluationFunction;
 import opt.GenericHillClimbingProblem;
 import opt.HillClimbingProblem;
 import opt.NeighborFunction;
+import opt.OptimizationAlgorithm;
 import opt.RandomizedHillClimbing;
 import opt.SimulatedAnnealing;
 import opt.example.*;
@@ -26,6 +33,7 @@ import opt.prob.GenericProbabilisticOptimizationProblem;
 import opt.prob.MIMIC;
 import opt.prob.ProbabilisticOptimizationProblem;
 import shared.FixedIterationTrainer;
+import util.RunLogFitnessFunction;
 
 /**
  * A test of the knap sack problem
@@ -70,7 +78,17 @@ public class KnapsackTest {
         HillClimbingProblem hcp = new GenericHillClimbingProblem(ef, odd, nf);
         GeneticAlgorithmProblem gap = new GenericGeneticAlgorithmProblem(ef, odd, mf, cf);
         ProbabilisticOptimizationProblem pop = new GenericProbabilisticOptimizationProblem(ef, odd, df);
-        
+
+        String[] oaNames = {"RHC", "SA", "GA", "MIMIC"};
+        OptimizationAlgorithm[] oa = new OptimizationAlgorithm[4];   
+        oa[0] = new RandomizedHillClimbing(hcp);      
+        oa[1] = new SimulatedAnnealing(100, .95, hcp); 
+        oa[2] = new StandardGeneticAlgorithm(200, 150, 25, gap); 
+        oa[3] = new MIMIC(200, 100, pop);
+        for(int i = 0; i < oa.length; i++) {
+        	RunLogFitnessFunction.run(oa[i], oaNames[i], 1000, ef, "knapsack");
+        }
+		
         RandomizedHillClimbing rhc = new RandomizedHillClimbing(hcp);      
         FixedIterationTrainer fit = new FixedIterationTrainer(rhc, 200000);
         fit.train();
@@ -91,5 +109,4 @@ public class KnapsackTest {
         fit.train();
         System.out.println("MIMIC: " + ef.value(mimic.getOptimal()));
     }
-
 }
